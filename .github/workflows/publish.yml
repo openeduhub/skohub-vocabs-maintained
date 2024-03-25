@@ -1,5 +1,10 @@
 name: publish to dockerhub
 
+env:
+  docker_repository: "docker.edu-sharing.com"
+  image_name: "/projects/wlo/edu_sharing-projects-wlo-skohub-vocabs"
+
+
 on:
   push:
     branches: 
@@ -10,14 +15,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-      with:
-        submodules: true
-    - uses: azure/docker-login@v1
-      with:
-        username: ${{ github.repository_owner }}
-        password: ${{ secrets.DOCKERHUB_PASSWORD }}
+    - uses: rlespinasse/github-slug-action@v4
+      - name: Log in to edu sharing
+        run: docker login ${{env.docker_repository}} -u ${{ secrets.DOCKER_EDU_HUB_REGISTRY_USERNAME }} -p ${{ secrets.DOCKER_EDU_HUB_REGISTRY_PASSWORD }}
     - uses: rlespinasse/github-slug-action@v2.x
-    - name: Build Docker image
-      run: docker build --tag ${{ github.repository }}:${{ env.GITHUB_REF_SLUG }} .
-    - name: Publish to DockerHub
-      run: docker push ${{ github.repository }}:${{ env.GITHUB_REF_SLUG }}
+      - name: Build
+        run: docker build -t ${{env.docker_repository}}${{env.image_name}}:${{ env.GITHUB_REF_SLUG }} ./src
+      - name: Push
+        run: docker push ${{env.docker_repository}}${{env.image_name}}:${{ env.GITHUB_REF_SLUG }}
